@@ -1,0 +1,146 @@
+Samba Server Installation & Configuration Guide
+===============================================
+
+1. Install Required Packages:
+-----------------------------
+sudo dnf install samba samba-client samba-common -y
+
+2. Create Shared Directory for Single User Access:
+--------------------------------------------------
+sudo mkdir -p /srv/samba/shared
+sudo chmod -R 0777 /srv/samba/shared
+
+3. Create a Samba User:
+------------------------
+sudo useradd sambauser
+sudo passwd sambauser
+sudo smbpasswd -a sambauser
+
+4. Edit smb.conf for Single User Access:
+----------------------------------------
+sudo nano /etc/samba/smb.conf
+
+Add:
+[Shared]
+   path = /srv/samba/shared
+   browsable = yes
+   writable = yes
+   guest ok = no
+   valid users = sambauser
+
+[static ip]
+----------------------------------------------
+[global]
+   workgroup = SAMBA
+   server string = Samba Server
+   netbios name = redhat
+   security = user
+   map to guest = Bad User
+   dns proxy = no
+
+   # Bind Samba to specific IPs
+   interfaces = 192.168.1.100 192.168.1.101 lo
+   bind interfaces only = yes
+
+   # Logging
+   log file = /var/log/samba/%m.log
+   max log size = 50
+
+
+5. Multi-User Shared Directory Configuration:
+---------------------------------------------
+sudo groupadd sharedusers
+sudo mkdir -p /srv/samba/projects
+sudo chown root:sharedusers /srv/samba/projects
+sudo chmod -R 2770 /srv/samba/projects
+
+6. Create Users (without home directory):
+-----------------------------------------
+sudo useradd -M -s /sbin/nologin ajay
+sudo useradd -M -s /sbin/nologin nisha
+sudo useradd -M -s /sbin/nologin rahul
+
+7. Add Users to Group:
+----------------------
+sudo usermod -aG sharedusers ajay
+sudo usermod -aG sharedusers nisha
+sudo usermod -aG sharedusers rahul
+
+8. Set Samba Passwords for Users:
+---------------------------------
+sudo smbpasswd -a ajay
+sudo smbpasswd -a nisha
+sudo smbpasswd -a rahul
+
+9. Edit smb.conf for Multi-User Share:
+--------------------------------------
+[Projects]
+   path = /srv/samba/projects
+   valid users = @sharedusers
+   guest ok = no
+   writable = yes
+   browseable = yes
+   create mask = 0660
+   directory mask = 2770
+
+10. User-Specific Private Shares:
+---------------------------------
+sudo mkdir /srv/samba/ajay
+sudo chown ajay:ajay /srv/samba/ajay
+chmod 700 /srv/samba/ajay
+
+sudo mkdir /srv/samba/nisha
+sudo chown nisha:nisha /srv/samba/nisha
+chmod 700 /srv/samba/nisha
+
+11. Edit smb.conf for Private Shares:
+-------------------------------------
+[AjayShare]
+   path = /srv/samba/ajay
+   valid users = ajay
+   guest ok = no
+   writable = yes
+   browseable = yes
+
+[NishaShare]
+   path = /srv/samba/nisha
+   valid users = nisha
+   guest ok = no
+   writable = yes
+   browseable = yes
+
+12. Configure SELinux (if enabled):
+-----------------------------------
+sudo chcon -Rt samba_share_t /srv/samba/shared
+sudo semanage fcontext -a -t samba_share_t "/srv/samba/shared(/.*)?"
+sudo restorecon -Rv /srv/samba/shared
+
+sudo chcon -Rt samba_share_t /srv/samba/projects
+sudo semanage fcontext -a -t samba_share_t "/srv/samba/projects(/.*)?"
+sudo restorecon -Rv /srv/samba/projects
+
+sudo chcon -Rt samba_share_t /srv/samba/ajay
+sudo chcon -Rt samba_share_t /srv/samba/nisha
+
+13. Enable Samba Through Firewall:
+----------------------------------
+sudo firewall-cmd --permanent --add-service=samba
+sudo firewall-cmd --reload
+
+14. Enable and Start Samba Services:
+------------------------------------
+sudo systemctl enable --now smb nmb
+sudo systemctl restart smb nmb
+
+15. Test Locally:
+-----------------
+smbclient //localhost/Shared -U sambauser
+smbclient //localhost/Projects -U ajay
+
+16. Access From Windows:
+------------------------
+\<server-ip>\Shared
+\<server-ip>\Projects
+\<server-ip>\AjayShare
+
+Tip: Run `testparm` to validate smb.conf after editing.
