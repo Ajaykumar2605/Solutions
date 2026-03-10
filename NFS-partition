@@ -1,0 +1,127 @@
+NFS Linux-to-Linux File Share Setup Guide (Full Detail)
+========================================================
+--------------------------------------------------------
+1. SERVER SETUP (Machine that shares the folder)
+--------------------------------------------------------
+
+Step 1: Install NFS utilities
+-----------------------------
+sudo dnf install nfs-utils -y
+
+Step 2: Create directory to share
+---------------------------------
+sudo mkdir -p /mnt/shared
+sudo chmod -R 777 /mnt/shared
+# 777 is optional; use based on permissions required
+
+Step 3: Configure exports
+-------------------------
+sudo nano /etc/exports
+
+Add the line:
+/mnt/shared *(rw,sync,no_root_squash)
+
+Explanation of options:
+  rw              - read/write
+  sync            - data written immediately to disk
+  no_root_squash  - allows root access from clients
+
+Step 4: Apply export changes
+----------------------------
+sudo exportfs -r
+
+Step 5: Start and enable NFS service
+------------------------------------
+sudo systemctl enable --now nfs-server
+sudo systemctl restart nfs-server
+
+Step 6: Allow firewall (if needed)
+----------------------------------
+sudo firewall-cmd --add-service=nfs --permanent
+sudo firewall-cmd --reload
+
+
+--------------------------------------------------------
+2. CLIENT SETUP (Machine that mounts the NFS share)
+--------------------------------------------------------
+
+Step 1: Install NFS utilities
+-----------------------------
+sudo dnf install nfs-utils -y
+
+Step 2: Create mount directory
+------------------------------
+sudo mkdir -p /mnt/remoteshare
+
+Step 3: Mount remote folder
+---------------------------
+sudo mount SERVER_IP:/mnt/shared /mnt/remoteshare
+
+Example:
+sudo mount 192.168.1.20:/mnt/shared /mnt/remoteshare
+
+Verify mounted share:
+mount | grep nfs
+
+
+--------------------------------------------------------
+3. AUTO MOUNT (Optional - recommended)
+--------------------------------------------------------
+
+To auto-mount at boot, edit fstab:
+
+sudo nano /etc/fstab
+
+Add this line:
+SERVER_IP:/mnt/shared   /mnt/remoteshare   nfs   defaults  0  0
+
+Then reload fstab:
+sudo mount -a
+
+
+--------------------------------------------------------
+4. TESTING FUNCTIONALITY
+--------------------------------------------------------
+
+On SERVER:
+  touch /mnt/shared/server.txt
+
+On CLIENT:
+  ls /mnt/remoteshare/
+Expected output: server.txt
+
+On CLIENT:
+  touch /mnt/remoteshare/client.txt
+
+On SERVER:
+  ls /mnt/shared/
+Expected output: client.txt
+
+
+--------------------------------------------------------
+5. TROUBLESHOOTING
+--------------------------------------------------------
+
+Permission denied → Fix:
+sudo chmod -R 777 /mnt/shared
+
+Mount fails → Fixes:
+  - Check connectivity
+    ping SERVER_IP
+  - Check export list
+    sudo exportfs -v
+  - Restart services
+    sudo systemctl restart nfs-server
+
+Forced unmount if stuck:
+sudo umount -f /mnt/remoteshare
+
+
+--------------------------------------------------------
+Summary
+--------------------------------------------------------
+SERVER shares folder using NFS.
+CLIENT mounts that shared folder locally.
+
+SERVER share path: /mnt/shared
+CLIENT mount path: /mnt/remoteshare
