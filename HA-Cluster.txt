@@ -5,9 +5,7 @@ pcs status --full
 crm_mon -1
 crm_mon -Arf
 
-
 Check cluster nodes:
-
 pcs node status
 pcs node show
 
@@ -16,97 +14,65 @@ pcs cluster start --all
 pcs cluster stop --all
 pcs cluster restart --all
 
-
 Enable at boot:
-
 pcs cluster enable --all
 
 🔹 Node Management
-
 Put node in standby:
-
 pcs node standby node1
 
-
 Bring node back:
-
 pcs node unstandby node1
 
-
 Remove node:
-
 pcs cluster node remove node2
 
-
 Add node:
-
 pcs cluster node add node2
 
 🔹 Resource Management
-
 List resources:
-
 pcs resource status
 pcs resource show
 
-
 Create resource (example nginx):
-
 pcs resource create web ocf:heartbeat:nginx \
   configfile=/etc/nginx/nginx.conf \
   op monitor interval=30s
 
-
 Start / Stop resource:
-
 pcs resource enable web
 pcs resource disable web
 
-
 Restart resource:
-
 pcs resource restart web
 
-
 Move resource:
-
 pcs resource move web node2
 pcs resource clear web
 
 🔹 Fencing (STONITH)
-
 Check fencing:
-
 pcs stonith status
 pcs stonith show
 
-
 Disable fencing (lab only):
-
 pcs property set stonith-enabled=false
 
 🔹 Constraints
-
 Show constraints:
-
 pcs constraint
 
-
 Create colocation:
-
 pcs constraint colocation add web with vip INFINITY
 
-
 Create order:
-
 pcs constraint order vip then web
 
 🔹 Cluster Properties
 pcs property list
 pcs property show
 
-
 Maintenance mode:
-
 pcs property set maintenance-mode=true
 pcs property set maintenance-mode=false
