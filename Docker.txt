@@ -6,56 +6,42 @@ systemctl restart docker
 systemctl status docker
 
 🔹 Containers
-
 List containers:
-
 docker ps
 docker ps -a
 
-
 Run container:
-
 docker run -d --name web nginx
 
-
 Stop / Start:
-
 docker stop web
 docker start web
 docker restart web
 
 
 Delete container:
-
 docker rm web
 docker rm -f web
 
 🔹 Images
-
 List images:
-
 docker images
 
-
 Pull image:
-
 docker pull nginx
 
 
 Remove image:
 
 docker rmi nginx
-
 🔹 Logs & Exec
 
 Logs:
-
 docker logs web
 docker logs -f web
 
 
 Enter container:
-
 docker exec -it web /bin/bash
 
 🔹 Volumes
@@ -66,7 +52,6 @@ docker volume prune
 
 
 Run with volume:
-
 docker run -d -v data:/app nginx
 
 🔹 Networks
