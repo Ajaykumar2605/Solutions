@@ -18,7 +18,6 @@ docker stop web
 docker start web
 docker restart web
 
-
 Delete container:
 docker rm web
 docker rm -f web
@@ -30,16 +29,13 @@ docker images
 Pull image:
 docker pull nginx
 
-
 Remove image:
-
 docker rmi nginx
 🔹 Logs & Exec
 
 Logs:
 docker logs web
 docker logs -f web
-
 
 Enter container:
 docker exec -it web /bin/bash
@@ -49,7 +45,6 @@ docker volume ls
 docker volume create data
 docker volume rm data
 docker volume prune
-
 
 Run with volume:
 docker run -d -v data:/app nginx
