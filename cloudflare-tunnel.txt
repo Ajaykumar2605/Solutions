@@ -1,0 +1,51 @@
+Cloudflare Tunnel Setup Guide for RHEL 9.x
+----------------------------------------------
+1. Update System
+   sudo dnf update -y
+   sudo dnf install wget curl nano -y
+
+2. Add Cloudflared Repository
+   sudo tee /etc/yum.repos.d/cloudflared.repo > /dev/null << 'EOF'
+   [cloudflared]
+   name=cloudflared repository
+   baseurl=https://pkg.cloudflare.com/yum
+   enabled=1
+   gpgcheck=0
+   EOF
+
+3. Install Cloudflared
+   sudo dnf install cloudflared -y
+   cloudflared --version
+
+4. Authenticate Cloudflare
+   cloudflared tunnel login
+
+5. Create a Tunnel
+   cloudflared tunnel create MYTUNNEL
+
+6. Configure Tunnel
+   nano /etc/cloudflared/config.yml
+
+   tunnel: TUNNEL_ID
+   credentials-file: /root/.cloudflared/TUNNEL_ID.json
+   ingress:
+     - hostname: app.yourdomain.com
+       service: http://localhost:8000
+     - service: http_status:404
+
+7. Create DNS Route
+   cloudflared tunnel route dns MYTUNNEL app.yourdomain.com
+
+8. Enable Systemd Auto-start
+   sudo cloudflared service install
+   sudo systemctl enable cloudflared
+   sudo systemctl start cloudflared
+   sudo systemctl status cloudflared
+
+9. Restart Cloudflared When Needed
+   systemctl restart cloudflared
+
+10. Troubleshooting
+   - Ensure outbound internet (Port 443) is open
+   - Verify backend service port
+   - Re-run DNS route if hostname not resolving
